@@ -14,7 +14,7 @@
   <!--vue-ssr-outlet-->
     <div id="post-long">
       <h1>{{ title }}</h1>
-      <h5 class="author">{{ author }} {{ time }}</h5>
+      <h5 class="author">{{ author_name }} @{{ author_username }} {{ time }}</h5>
       <h5 class="tags"><span v-for="tag in tags">{{ tag }}</span></h5>
       <p>{{ text }}</p>
     </div>

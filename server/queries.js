@@ -33,43 +33,55 @@ const renderAndSendPost = (POST_ID, res) => {
     .query('SELECT * FROM posts WHERE id = $1', [POST_ID])
     .then((results) => {
       const info = results.rows[0];
-      const POST_TITLE = info.title;
-      const POST_AUTHOR = info.author;
-      const POST_TIME = info.time;
-      const post_tag_string = info.tags;
-      const POST_TAGS = post_tag_string.split(',');
+      getUsernamesFromId(info.author)
+        .then((author) => {
+          const POST_TITLE = info.title;
+          const POST_AUTHOR_NAME = author.name;
+          const POST_AUTHOR_USERNAME = author.username;
+          const POST_TIME = info.time;
+          const post_tag_string = info.tags;
+          const POST_TAGS = post_tag_string.split(',');
 
-      const stuff = {
-        title: POST_TITLE,
-        author: POST_AUTHOR,
-        time: POST_TIME,
-        tags: POST_TAGS,
-        text: POST_CONTENTS
-      }
+          const vue_app = new Vue({
+            data: {
+              title: POST_TITLE,
+              author_name: POST_AUTHOR_NAME,
+              author_username: POST_AUTHOR_USERNAME,
+              time: POST_TIME,
+              tags: POST_TAGS,
+              text: POST_CONTENTS
+            },
+            template: POST_TEMPLATE
+          });
 
-      const vue_app = new Vue({
-        data: {
-          title: POST_TITLE,
-          author: POST_AUTHOR,
-          time: POST_TIME,
-          tags: POST_TAGS,
-          text: POST_CONTENTS
-        },
-        template: POST_TEMPLATE
-      });
-
-      POST_RENDERER
-        .renderToString(vue_app, {})
-        .then(html => {
-          res.send(html);
-          return;
+          POST_RENDERER
+            .renderToString(vue_app, {})
+            .then(html => {
+              res.send(html);
+              return;
+            })
+            .catch(error => console.log(error));
         })
         .catch(error => console.log(error));
+      
     })
-    .catch((error) => {
-      console.log(error); 
-    });
-  
+    .catch((error) => console.log(error));
+}
+
+const getUsernamesFromId = (id) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM users WHERE id = $1', [id])
+      .then(results => {
+        resolve({
+          'username': results.rows[0].username,
+          'name': results.rows[0].name
+        })
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
 }
 
 module.exports = {
