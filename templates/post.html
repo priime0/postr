@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <title>postr | {{ title }}</title>
+</head>
+<body>
+  <header id="header"></header>
+  <main id="main">
+  <!--vue-ssr-outlet-->
+    <div id="post-long">
+      <h1>{{ title }}</h1>
+      <h5 class="author">{{ author }} {{ time }}</h5>
+      <h5 class="tags"><span v-for="tag in tags">{{ tag }}</span></h5>
+      <p>{{ text }}</p>
+    </div>
+    <div id="comment-section">
+
+    </div>
+  </main>
+  <script type="text/javascript" src="../post.js"></script>
+</body>
+</html>

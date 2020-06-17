@@ -21,6 +21,10 @@ app.get('/script.js', (req, res) => {
   res.sendFile(FILE);
 });
 
+app.get('/post/:id', (req, res) => {
+  db.getPost(req, res);
+});
+
 app.listen(PORT, () => {
   console.log(`App hosted at http://localhost:3000`);
 });
