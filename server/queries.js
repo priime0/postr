@@ -3,6 +3,7 @@ const vsr = require('vue-server-renderer');
 const Pool = require('pg').Pool;
 const fs = require('fs');
 const path = require('path');
+const { v4: uuid } = require('uuid');
 const pool = new Pool({
   user: 'me',
   host: 'localhost',
@@ -18,7 +19,7 @@ const POST_RENDERER = vsr.createRenderer({
 });
 
 const getFeed = (req, res) => {
-
+  const userauth = req.query.auth;
 };
 
 const getPost = (req, res) => {
@@ -68,6 +69,19 @@ const renderAndSendPost = (POST_ID, res) => {
     .catch((error) => console.log(error));
 }
 
+const loginUser = (req, res) => {
+  const { username, password } = req.body;
+  checkUserLogin(username, password)
+    .then(result => {
+      res
+        .status(200)
+        .end(createNewUUID);
+    })
+    .catch(error => {
+      res.send(error);
+    });
+}
+
 const getUsernamesFromId = (id) => {
   return new Promise((resolve, reject) => {
     pool
@@ -82,6 +96,29 @@ const getUsernamesFromId = (id) => {
         reject(error);
       });
   });
+}
+
+const checkUserLogin = (username, password) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM users WHERE username = $1', [username])
+      .then(results => {
+        const info = results.rows[0];
+        if (password === info.password) {
+          resolve("Correct password");
+        }
+        else {
+          reject("Incorrect password");
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
+
+const createNewUUID = () => {
+  return uuidv4();
 }
 
 module.exports = {
