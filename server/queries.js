@@ -20,6 +20,21 @@ const POST_RENDERER = vsr.createRenderer({
 
 const getFeed = (req, res) => {
   const userauth = req.query.auth;
+  getUserIDFromUUID(userauth)
+    .then(user_id => {
+      pool
+        .query('SELECT * FROM posts WHERE NOT author = $1', [user_id])
+        .then(results => {
+          const posts = results.rows;
+          res.send(posts);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    })
+    .catch(error => {
+      console.log(error);
+    });
 };
 
 const getPost = (req, res) => {
@@ -91,6 +106,19 @@ const getUsernamesFromId = (id) => {
           'username': results.rows[0].username,
           'name': results.rows[0].name
         })
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
+
+const getUserIDFromUUID = (auth) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM users WHERE uuid = $1 LIMIT 1', [auth])
+      .then(results => {
+        resolve(results.rows[0].id);
       })
       .catch(error => {
         reject(error);
