@@ -39,7 +39,7 @@ app.get('/post/:id', (req, res) => {
 app.get('/api/feed', (req, res) => {
   const userauth = req.query.auth;
   if (userauth === undefined) {
-    res.send(401).end("Authentication required");
+    res.status(401).end("Authentication required");
   }
   else {
     db.getFeed(userauth)
