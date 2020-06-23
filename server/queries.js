@@ -71,8 +71,8 @@ const getPostInfo = (POST_ID) => {
           .then((author) => {
             resolve({
               "title": post.title,
-              "author-name": author.name,
-              "author-username": author.username,
+              "author_name": author.name,
+              "author_username": author.username,
               "time": post.time,
               "tags": post.tags.split(','),
               "text": POST_CONTENTS
