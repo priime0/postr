@@ -77,7 +77,7 @@ const getPostInfo = (POST_ID) => {
               "tags": post.tags.split(','),
               "text": POST_CONTENTS
             });
-          });
+          })
           .catch(error => {
             reject(error);
           });
@@ -174,4 +174,5 @@ const createNewUUID = () => {
 module.exports = {
   getPost: getPost,
   getFeed: getFeed,
+  getPostInfo: getPostInfo,
 }
