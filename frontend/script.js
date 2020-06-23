@@ -1,3 +1,5 @@
+const BASE_URL = 'http://localhost:3000';
+
 window.addEventListener('load', (event) => {
   let cookies = document.cookie;
   if (cookies === undefined || getCookie('auth') === undefined) {
@@ -34,18 +36,7 @@ Vue.component('post', {
 const updateFeed = () => {
   getCookie('auth')
     .then(uuid => {
-
-    })
-    .catch(error => {
-      console.log(error);
-    });
-};
-
-const fetchFeed = (uuid) => {
-  const URL = `http://localhost:3000/api/feed?auth=${uuid}`;
-  fetch(URL)
-    .then(data => {
-      data.json()
+      fetchFeed(uuid)
         .then(posts => {
           postFeed.feed = posts;
         })
@@ -56,6 +47,25 @@ const fetchFeed = (uuid) => {
     .catch(error => {
       console.log(error);
     });
+};
+
+const fetchFeed = (uuid) => {
+  const URL = `${BASE_URL}/api/feed?auth=${uuid}`;
+  return new Promise((resolve, reject) => {
+    fetch(URL)
+      .then(data => {
+        data.json()
+          .then(posts => {
+            resolve(posts);
+          })
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
 };
 
 const getCookie = (name) => {
