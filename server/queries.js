@@ -3,7 +3,7 @@ const vsr = require('vue-server-renderer');
 const Pool = require('pg').Pool;
 const fs = require('fs');
 const path = require('path');
-const { v4: uuid } = require('uuid');
+const uuid = require('uuid');
 const pool = new Pool({
   user: 'me',
   host: 'localhost',
@@ -18,27 +18,22 @@ const POST_RENDERER = vsr.createRenderer({
   POST_TEMPLATE,
 });
 
-const getFeed = (req, res) => {
-  const userauth = req.query.auth;
-  if (userauth == undefined) {
-    res.status(401).end("Auth required");
-    return;
-  }
-  getUserIDFromUUID(userauth)
-    .then(user_id => {
-      pool
-        .query('SELECT * FROM posts WHERE NOT author = $1', [user_id])
-        .then(results => {
-          const posts = results.rows;
-          res.send(posts);
-        })
-        .catch(error => {
-          console.log(error);
-        });
-    })
-    .catch(error => {
-      console.log(error);
-    });
+const getFeed = (userauth) => {
+  return new Promise((resolve, reject) => {
+    getUserIDFromUUID(userauth)
+      .then(user_id => {
+        getPostsExcludingUser(user_id)
+          .then(posts => {
+            resolve(posts);
+          })
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
 };
 
 const getPost = (POST_ID) => {
@@ -57,7 +52,7 @@ const getPost = (POST_ID) => {
         reject(error);
       });
   });
-}
+};
 
 const getPostInfo = (POST_ID) => {
   return new Promise((resolve, reject) => {
@@ -86,7 +81,7 @@ const getPostInfo = (POST_ID) => {
         reject(error);
       });
   });
-}
+};
 
 const renderPostPage = (post) => {
   return new Promise((resolve, reject) => {
@@ -104,20 +99,54 @@ const renderPostPage = (post) => {
         reject(error);
       });
   });
-}
+};
 
-const loginUser = (req, res) => {
-  const { username, password } = req.body;
-  checkUserLogin(username, password)
-    .then(result => {
-      res
-        .status(200)
-        .end(createNewUUID);
-    })
-    .catch(error => {
-      res.send(error);
-    });
-}
+const loginUser = (username, password) => {
+  return new Promise((resolve, reject) => {
+    checkUserLogin(username, password)
+      .then(result => {
+        addUUID(username)
+          .then(id => {
+            resolve({"uuid": id});
+          })
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const getPostsExcludingUser = (user_id) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM posts WHERE NOT author = $1 ORDER BY time ASC', [user_id])
+      .then(results => {
+        let posts = results.rows;
+        let detailed_posts = posts.map(post => {
+          return getPostInfo(post.id)
+            .then(info => {
+              return info;
+            })
+            .catch(error => {
+              reject(error);
+            });
+        });
+        Promise.all(detailed_posts)
+          .then(results => {
+            resolve(results);
+          })
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
 
 const getUsernamesFromId = (id) => {
   return new Promise((resolve, reject) => {
@@ -133,20 +162,25 @@ const getUsernamesFromId = (id) => {
         reject(error);
       });
   });
-}
+};
 
 const getUserIDFromUUID = (auth) => {
   return new Promise((resolve, reject) => {
     pool
       .query('SELECT * FROM users WHERE uuid = $1 LIMIT 1', [auth])
       .then(results => {
-        resolve(results.rows[0].id);
+        if (results.rows.length === 0) {
+          reject(404);
+        }
+        else {
+          resolve(results.rows[0].id);
+        }
       })
       .catch(error => {
         reject(error);
       });
   });
-}
+};
 
 const checkUserLogin = (username, password) => {
   return new Promise((resolve, reject) => {
@@ -165,14 +199,36 @@ const checkUserLogin = (username, password) => {
         reject(error);
       });
   });
-}
+};
+
+const addUUID = (username) => {
+  return new Promise((resolve, reject) => {
+    createNewUUID()
+      .then(id => {
+        pool
+         .query('UPDATE users SET uuid = $1 WHERE username = $2', [id, username])
+         .then(results => {
+           resolve(id);
+         })
+         .catch(error => {
+           reject(error);
+         });
+      })
+      .catch(error => {
+        reject(error);
+      });
+    });
+};
 
 const createNewUUID = () => {
-  return uuidv4();
-}
+  return new Promise((resolve, reject) => {
+    resolve(uuid.v4());
+  });
+};
 
 module.exports = {
   getPost: getPost,
   getFeed: getFeed,
   getPostInfo: getPostInfo,
+  loginUser: loginUser,
 }

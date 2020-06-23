@@ -6,6 +6,9 @@ const PORT = 3000;
 
 const FRONTEND_DIR = '/../frontend';
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.get('/', (req, res) => {
   const FILE = path.join(__dirname, `${FRONTEND_DIR}/home.html`);
   res.sendFile(FILE);
@@ -21,10 +24,6 @@ app.get('/script.js', (req, res) => {
   res.sendFile(FILE);
 });
 
-app.get('/feed', (req, res) => {
-  getFeed(req, res);
-});
-
 app.get('/post/:id', (req, res) => {
   const POST_ID = req.params.id;
   db.getPost(POST_ID)
@@ -35,6 +34,39 @@ app.get('/post/:id', (req, res) => {
       res.status(404);
       console.log(error);
     });
+});
+
+app.get('/api/feed', (req, res) => {
+  const userauth = req.query.auth;
+  if (userauth === undefined) {
+    res.send(401).end("Authentication required");
+  }
+  else {
+    db.getFeed(userauth)
+      .then(feed => {
+        res.json(feed);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+});
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === undefined || password === undefined) {
+    res.status(401);
+  }
+  else {
+    db.loginUser(username, password)
+      .then(uuid => {
+        res.json(uuid);
+      })
+      .catch(error => {
+        res.status(401);
+        console.log(error);
+      });
+  }
 });
 
 app.listen(PORT, () => {
