@@ -3,7 +3,7 @@ const BASE_URL = 'http://localhost:3000';
 window.addEventListener('load', (event) => {
   let cookies = document.cookie;
   if (cookies === undefined || getCookie('auth') === undefined) {
-    postFeed.loggedin= false;
+    postFeed.loggedin = false;
   }
   else {
     postFeed.loggedin = true;
@@ -12,11 +12,18 @@ window.addEventListener('load', (event) => {
 });
 
 const postFeed = new Vue({
-  el: '#posts',
+  el: '#main',
   data: {
     loggedin: false,
     feed: []
   }
+});
+
+Vue.component('login-form', {
+  template:
+    `<div id="login-form">
+     </div>
+    `
 });
 
 Vue.component('post', {
@@ -33,15 +40,10 @@ Vue.component('post', {
 });
 
 const updateFeed = () => {
-  getCookie('auth')
-    .then(uuid => {
-      fetchFeed(uuid)
-        .then(posts => {
-          postFeed.feed = posts;
-        })
-        .catch(error => {
-          console.log(error);
-        });
+  const uuid = getCookie('auth')
+  fetchFeed(uuid)
+    .then(posts => {
+      postFeed.feed = posts;
     })
     .catch(error => {
       console.log(error);
