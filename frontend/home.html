@@ -10,7 +10,17 @@
 </head>
 <body>
   <header id="header"></header>
-  <main id="main"></main>
+  <main id="main">
+    <div v-if="loggedin">
+      <div class="container" id="sidebar"></div>
+      <div class="container" id="posts">
+        <post v-for="p in feed" v-bind:key="p.id" v-bind:info="p"></post>
+      </div>
+    </div>
+    <div v-else>
+      <p>Display login form here.</p>
+    </div>
+  </main>
   <script type="text/javascript" src="../script.js"></script>
 </body>
 </html>
