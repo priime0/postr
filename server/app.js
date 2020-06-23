@@ -21,8 +21,20 @@ app.get('/script.js', (req, res) => {
   res.sendFile(FILE);
 });
 
+app.get('/feed', (req, res) => {
+  getFeed(req, res);
+});
+
 app.get('/post/:id', (req, res) => {
-  db.getPost(req, res);
+  const POST_ID = req.params.id;
+  db.getPost(POST_ID)
+    .then(html => {
+      res.status(200).send(html);
+    })
+    .catch(error => {
+      res.status(404);
+      console.log(error);
+    });
 });
 
 app.listen(PORT, () => {

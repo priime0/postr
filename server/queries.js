@@ -20,6 +20,10 @@ const POST_RENDERER = vsr.createRenderer({
 
 const getFeed = (req, res) => {
   const userauth = req.query.auth;
+  if (userauth == undefined) {
+    res.status(401).end("Auth required");
+    return;
+  }
   getUserIDFromUUID(userauth)
     .then(user_id => {
       pool
@@ -37,51 +41,69 @@ const getFeed = (req, res) => {
     });
 };
 
-const getPost = (req, res) => {
-  const POST_ID = req.params.id;
-  renderAndSendPost(POST_ID, res);
-};
-
-const renderAndSendPost = (POST_ID, res) => {
-  const POST_FILE = path.join(__dirname, `${POST_DIR}/${POST_ID}`);
-  const POST_CONTENTS = fs.readFileSync(POST_FILE, 'utf-8');
-  pool
-    .query('SELECT * FROM posts WHERE id = $1', [POST_ID])
-    .then((results) => {
-      const info = results.rows[0];
-      getUsernamesFromId(info.author)
-        .then((author) => {
-          const POST_TITLE = info.title;
-          const POST_AUTHOR_NAME = author.name;
-          const POST_AUTHOR_USERNAME = author.username;
-          const POST_TIME = info.time;
-          const post_tag_string = info.tags;
-          const POST_TAGS = post_tag_string.split(',');
-
-          const vue_app = new Vue({
-            data: {
-              title: POST_TITLE,
-              author_name: POST_AUTHOR_NAME,
-              author_username: POST_AUTHOR_USERNAME,
-              time: POST_TIME,
-              tags: POST_TAGS,
-              text: POST_CONTENTS
-            },
-            template: POST_TEMPLATE
+const getPost = (POST_ID) => {
+  return new Promise((resolve, reject) => {
+    getPostInfo(POST_ID)
+      .then(post => {
+        renderPostPage(post)
+          .then(html => {
+            resolve(html);
+          })
+          .catch(error => {
+            reject(error);
           });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
 
-          POST_RENDERER
-            .renderToString(vue_app, {})
-            .then(html => {
-              res.send(html);
-              return;
-            })
-            .catch(error => console.log(error));
-        })
-        .catch(error => console.log(error));
-      
-    })
-    .catch((error) => console.log(error));
+const getPostInfo = (POST_ID) => {
+  return new Promise((resolve, reject) => {
+    const POST_FILE = path.join(__dirname, `${POST_DIR}/${POST_ID}`);
+    const POST_CONTENTS = fs.readFileSync(POST_FILE, 'utf-8');
+    pool
+      .query('SELECT * FROM posts WHERE id = $1', [POST_ID])
+      .then((results) => {
+        const post = results.rows[0];
+        getUsernamesFromId(post.author)
+          .then((author) => {
+            resolve({
+              "title": post.title,
+              "author-name": author.name,
+              "author-username": author.username,
+              "time": post.time,
+              "tags": post.tags.split(','),
+              "text": POST_CONTENTS
+            });
+          });
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
+
+const renderPostPage = (post) => {
+  return new Promise((resolve, reject) => {
+    const vue_app = new Vue({
+      data: post,
+      template: POST_TEMPLATE
+    });
+
+    POST_RENDERER
+      .renderToString(vue_app, {})
+      .then(html => {
+        resolve(html);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
 }
 
 const loginUser = (req, res) => {
@@ -151,4 +173,5 @@ const createNewUUID = () => {
 
 module.exports = {
   getPost: getPost,
+  getFeed: getFeed,
 }
