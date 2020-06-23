@@ -5,5 +5,11 @@
     "uuid": "^8.1.0",
     "vue": "^2.6.11",
     "vue-server-renderer": "^2.6.11"
+  },
+  "devDependencies": {
+    "jest": "^26.0.1"
+  },
+  "scripts": {
+    "test": "jest"
   }
 }
