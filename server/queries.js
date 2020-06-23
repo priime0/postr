@@ -65,6 +65,7 @@ const getPostInfo = (POST_ID) => {
         getUsernamesFromId(post.author)
           .then((author) => {
             resolve({
+              "id": post.id,
               "title": post.title,
               "author_name": author.name,
               "author_username": author.username,
