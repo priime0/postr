@@ -7,8 +7,7 @@ window.addEventListener('load', (event) => {
   }
   else {
     postFeed.loggedin = true;
-    const uuid = getCookie('auth');
-    fetchFeed(uuid);
+    updateFeed();
   }
 });
 
