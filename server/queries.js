@@ -36,13 +36,47 @@ const getFeed = (userauth) => {
   });
 };
 
-const getPost = (POST_ID) => {
+const getPost = (POST_ID, auth) => {
   return new Promise((resolve, reject) => {
     getPostInfo(POST_ID)
       .then(post => {
-        renderPostPage(post)
-          .then(html => {
-            resolve(html);
+        getUserPublic(post.author_username)
+          .then(publicity => {
+            if (publicity === 'public') {
+              renderPostPage(post)
+                .then(renderedHtml => {
+                  resolve(renderedHtml);
+                })
+                .catch(error => {
+                  reject(error);
+                });
+            }
+            else {
+              getFollowStatus(auth, post.author_username)
+                .then(follow_status => {
+                  if (follow_status === 'accept') {
+                    renderPostPage(post)
+                      .then(renderedHtml => {
+                        resolve(renderedHtml);
+                      })
+                      .catch(error => {
+                        reject(error);
+                      });
+                  }
+                  else if (follow_status === 'wait') {
+                    // TODO: render "this user must accept your request" page
+                  }
+                  else if (follow_status === 'none') {
+                    // TODO: render "you must follow this user to view this post" page
+                  }
+                  else {
+                    // TODO: render "you must follow this user to view this post" page
+                  }
+                })
+                .catch(error => {
+                  reject(error);
+                });
+            }
           })
           .catch(error => {
             reject(error);
@@ -183,6 +217,24 @@ const getUserIDFromUUID = (auth) => {
   });
 };
 
+const getUserIDFromUsername = (username) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM users WHERE username = $1', [username])
+      .then(results => {
+        if (results.rows.length != 0) {
+          resolve(results.rows[0].username;
+        }
+        else {
+          reject('User does not exist');
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
 const checkUserLogin = (username, password) => {
   return new Promise((resolve, reject) => {
     pool
@@ -195,6 +247,55 @@ const checkUserLogin = (username, password) => {
         else {
           reject("Incorrect password");
         }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const getUserPublic = (username) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM users WHERE username = $1', [username])
+      .then(results => {
+        if (results.rows.length != 0) {
+          resolve(results.rows[0].privacy);
+        }
+        else {
+          reject("None");
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const getFollowStatus = (first_auth, second_username) => {
+  return new Promise((resolve, reject) => {
+    getUserIDFromUUID(first_auth)
+      .then(first_id => {
+        getUserIDFromUsername(second_username)
+          .then(second_id => {
+            pool
+              .query('SELECT * FROM follows WHERE follower = $1 AND followed = $2', 
+                [first_id, second_id])
+              .then(results => {
+                if (results.rows.length != 0) {
+                  resolve(results.rows[0].status);
+                }
+                else {
+                  resolve('none');
+                }
+              })
+              .catch(error => {
+                reject(error);
+              });
+          })
+          .catch(error => {
+            reject(error);
+          });
       })
       .catch(error => {
         reject(error);
