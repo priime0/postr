@@ -223,7 +223,7 @@ const getUserIDFromUsername = (username) => {
       .query('SELECT * FROM users WHERE username = $1', [username])
       .then(results => {
         if (results.rows.length != 0) {
-          resolve(results.rows[0].username;
+          resolve(results.rows[0].id);
         }
         else {
           reject('User does not exist');
