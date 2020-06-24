@@ -26,7 +26,8 @@ app.get('/script.js', (req, res) => {
 
 app.get('/post/:id', (req, res) => {
   const POST_ID = req.params.id;
-  db.getPost(POST_ID)
+  const auth = req.query.auth;
+  db.getPost(POST_ID, auth)
     .then(html => {
       res.status(200).send(html);
     })
