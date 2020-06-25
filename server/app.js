@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 const db = require('./queries.js');
 const app = express();
 const PORT = 3000;
@@ -8,6 +9,7 @@ const FRONTEND_DIR = '/../frontend';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 app.get('/', (req, res) => {
   const FILE = path.join(__dirname, `${FRONTEND_DIR}/home.html`);
@@ -19,22 +21,20 @@ app.get('/style.css', (req, res) => {
   res.sendFile(FILE);
 });
 
-app.get('/script.js', (req, res) => {
-  const FILE = path.join(__dirname, `${FRONTEND_DIR}/script.js`);
+app.get('/home.js', (req, res) => {
+  const FILE = path.join(__dirname, `${FRONTEND_DIR}/home.js`);
   res.sendFile(FILE);
 });
 
+//app.get('/post.js', (req, res) => {
+//  const FILE = path.join(__dirname, `${FRONTEND_DIR}/post.js`);
+//  res.sendFile(FILE);
+//});
+
 app.get('/post/:id', (req, res) => {
   const POST_ID = req.params.id;
-  const auth = req.query.auth;
-  db.getPost(POST_ID, auth)
-    .then(html => {
-      res.status(200).send(html);
-    })
-    .catch(error => {
-      res.status(404);
-      console.log(error);
-    });
+  const FILE = path.join(__dirname, `${FRONTEND_DIR}/post.html`);
+  res.sendFile(FILE);
 });
 
 app.get('/api/feed', (req, res) => {
@@ -51,6 +51,19 @@ app.get('/api/feed', (req, res) => {
         console.log(error);
       });
   }
+});
+
+app.get('/api/post/:id', (req, res) => {
+  const POST_ID = req.params.id;
+  const auth = req.query.auth;
+  db.getPost(POST_ID, auth)
+    .then(post => {
+      res.status(200).json(post);
+    })
+    .catch(error => {
+      res.status(404);
+      console.log(error);
+    });
 });
 
 app.post('/api/login', (req, res) => {

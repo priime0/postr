@@ -1,5 +1,4 @@
 const Vue = require('vue');
-const vsr = require('vue-server-renderer');
 const Pool = require('pg').Pool;
 const fs = require('fs');
 const path = require('path');
@@ -11,12 +10,7 @@ const pool = new Pool({
   password: 'password',
   port: 5432
 });
-const POST_TEMPLATE_PATH = path.join(__dirname, '/../templates/post.html');
-const POST_TEMPLATE = fs.readFileSync(POST_TEMPLATE_PATH, 'utf-8');
 const POST_DIR = '../data/posts';
-const POST_RENDERER = vsr.createRenderer({
-  POST_TEMPLATE,
-});
 
 const getFeed = (userauth) => {
   return new Promise((resolve, reject) => {
@@ -43,39 +37,35 @@ const getPost = (POST_ID, auth) => {
         getUserPublic(post.author_username)
           .then(publicity => {
             if (publicity === 'public') {
-              renderPostPage(post)
-                .then(renderedHtml => {
-                  resolve(renderedHtml);
-                })
-                .catch(error => {
-                  reject(error);
-                });
+              resolve(post);
             }
             else {
-              getFollowStatus(auth, post.author_username)
-                .then(follow_status => {
-                  if (follow_status === 'accept') {
-                    renderPostPage(post)
-                      .then(renderedHtml => {
-                        resolve(renderedHtml);
-                      })
-                      .catch(error => {
-                        reject(error);
-                      });
-                  }
-                  else if (follow_status === 'wait') {
-                    // TODO: render "this user must accept your request" page
-                  }
-                  else if (follow_status === 'none') {
-                    // TODO: render "you must follow this user to view this post" page
-                  }
-                  else {
-                    // TODO: render "you must follow this user to view this post" page
-                  }
-                })
-                .catch(error => {
-                  reject(error);
-                });
+              if (auth === undefined) {
+                resolve({ "error": "logged out" });
+              }
+              else {
+                getFollowStatus(auth, post.author_username)
+                  .then(follow_status => {
+                    if (follow_status === 'accept') {
+                      resolve(post);
+                    }
+                    else if (follow_status === 'wait') {
+                      resolve({ "error": "request awaiting" });
+                      // TODO: render "this user must accept your request" page
+                    }
+                    else if (follow_status === 'none') {
+                      resolve({ "error": "follow to view" });
+                      // TODO: render "you must follow this user to view this post" page
+                    }
+                    else {
+                      resolve({ "error": "follow to view" });
+                      // TODO: render "you must follow this user to view this post" page
+                    }
+                  })
+                  .catch(error => {
+                    reject(error);
+                  });
+              }
             }
           })
           .catch(error => {
@@ -111,24 +101,6 @@ const getPostInfo = (POST_ID) => {
           .catch(error => {
             reject(error);
           });
-      })
-      .catch(error => {
-        reject(error);
-      });
-  });
-};
-
-const renderPostPage = (post) => {
-  return new Promise((resolve, reject) => {
-    const vue_app = new Vue({
-      data: post,
-      template: POST_TEMPLATE
-    });
-
-    POST_RENDERER
-      .renderToString(vue_app, {})
-      .then(html => {
-        resolve(html);
       })
       .catch(error => {
         reject(error);
