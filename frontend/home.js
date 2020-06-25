@@ -29,18 +29,18 @@ Vue.component('login-form', {
 Vue.component('post', {
   props: ['info'],
   template: 
-    `<div class="post">
-       <h3 class="post-title">{{ info.title }}</h3>
-       <h4 class="post-author">{{ info.author_name }} @{{ info.author_username }}</h4>
-       <h4 class="post-time">{{ info.time }}</h4>
-       <h5 class="post-tags" v-for="tag in info.tags">{{ tag }}</h5>
-       <p class="post-text">{{ info.text.substring(0, 500) }}...</p>
-       <a href="localhost:3000/post/{{ info.id }}">read more</a>
-     </div>`
+  `<div class="post">
+     <h3 class="post-title">{{ info.title }}</h3>
+     <h4 class="post-author">{{ info.author_name }} @{{ info.author_username }}</h4>
+     <h4 class="post-time">{{ info.time }}</h4>
+     <h5 class="post-tags" v-for="tag in info.tags">{{ tag }}</h5>
+     <p class="post-text">{{ info.text.substring(0, 500) }}...</p>
+     <a href="localhost:3000/post/{{ info.id }}">read more</a>
+   </div>`
 });
 
 const updateFeed = () => {
-  const uuid = getCookie('auth')
+  const uuid = getCookie('auth');
   fetchFeed(uuid)
     .then(posts => {
       postFeed.feed = posts;

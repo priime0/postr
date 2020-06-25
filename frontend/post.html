@@ -11,12 +11,8 @@
 <body>
   <header id="header"></header>
   <main id="main">
-  <!--vue-ssr-outlet-->
     <div id="post-long">
-      <h1>{{ title }}</h1>
-      <h5 class="author">{{ author_name }} @{{ author_username }} {{ time }}</h5>
-      <h5 class="tags"><span v-for="tag in tags">{{ tag }}</span></h5>
-      <p>{{ text }}</p>
+      <detailedpost v-bind:key="postDetails.info.id" v-bind:info="postDetails.info"></detailedpost>
     </div>
     <div id="comment-section">
 
