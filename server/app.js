@@ -9,7 +9,6 @@ const FRONTEND_DIR = '/../frontend';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
 
 app.get('/', (req, res) => {
   const FILE = path.join(__dirname, `${FRONTEND_DIR}/home.html`);
@@ -26,10 +25,10 @@ app.get('/home.js', (req, res) => {
   res.sendFile(FILE);
 });
 
-//app.get('/post.js', (req, res) => {
-//  const FILE = path.join(__dirname, `${FRONTEND_DIR}/post.js`);
-//  res.sendFile(FILE);
-//});
+app.get('/post.js', (req, res) => {
+  const FILE = path.join(__dirname, `${FRONTEND_DIR}/post.js`);
+  res.sendFile(FILE);
+});
 
 app.get('/post/:id', (req, res) => {
   const POST_ID = req.params.id;
