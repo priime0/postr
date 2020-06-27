@@ -35,7 +35,7 @@ Vue.component('post', {
      <h4 class="post-time">{{ info.time }}</h4>
      <h5 class="post-tags" v-for="tag in info.tags">{{ tag }}</h5>
      <p class="post-text">{{ info.text.substring(0, 500) }}...</p>
-     <a href="localhost:3000/post/{{ info.id }}">read more</a>
+     <a :href="\`${BASE_URL}/post/\` + info.id">read more</a>
    </div>`
 });
 
