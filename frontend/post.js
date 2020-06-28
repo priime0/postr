@@ -15,14 +15,14 @@ window.addEventListener('load', (event) => {
 Vue.component('detailedpost', {
   props: ['info'],
   template:
-  `<h1>{{ info.title }}</h1>
+  `<div id="post-long"><h1>{{ info.title }}</h1>
    <h5 class="author">{{ info.author_name }} @{{ info.author_username }} {{ info.time }}</h5>
-   <h5 class="tags"><span v-for"tag in info.tags">{{ tag }}</span></h5>
-   <p>{{ info.text }}</p>`
+   <h5 class="tags"><span v-for="tag in info.tags">{{ tag }}</span></h5>
+   <p>{{ info.text }}</p></div>`
 });
 
 const postDetails = new Vue({
-  el: '#post-long',
+  el: "#main",
   data: {
     loggedin: false,
     info: {
@@ -37,19 +37,18 @@ const postDetails = new Vue({
   }
 });
 
+
+
 const updatePost = () => {
-  console.log('Updating post');
   const token = getCookie('auth');
-  console.log(`Cookie: ${token}`);
   if (token === undefined) {
     fetchPost()
       .then(post => {
-        console.log(`Post ${JSON.stringify(post)}`);
         if (post.error === undefined) {
           postDetails.info = post;
         }
         else {
-
+          console.log(post.error);
         }
       })
       .catch(error => {
@@ -59,12 +58,11 @@ const updatePost = () => {
   else {
     fetchPostAuth(token)
       .then(post => {
-        console.log(`Post ${JSON.stringify(post)}`);
         if (post.error === undefined) {
           postDetails.info = post;
         }
         else {
-
+          console.log(post.error);
         }
       })
       .catch(error => {
