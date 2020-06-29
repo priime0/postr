@@ -32,41 +32,47 @@ const getFeed = (userauth) => {
 
 const getPost = (POST_ID, auth) => {
   return new Promise((resolve, reject) => {
+    getPostIfViewable(POST_ID)
+      .then(result => {
+        if (result.publicity === 'public') {
+          resolve(result.post);
+        }
+        else {
+          getPrivatePostIfViewable(result.post, auth)
+            .then(result_json => {
+              resolve(result_json);
+            })
+            .catch(error => {
+              reject(error);
+            });
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const getPostComments = (POST_ID, auth) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM comments WHERE post = $1', [POST_ID])
+      .then(results => {
+        resolve(results.rows);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const getPostIfViewable = (POST_ID) => {
+  return new Promise((resolve, reject) => {
     getPostInfo(POST_ID)
       .then(post => {
-        getUserPublic(post.author_username)
+        isUserPublic(post.author_username)
           .then(publicity => {
-            if (publicity === 'public') {
-              resolve(post);
-            }
-            else {
-              if (auth === undefined) {
-                resolve({ "error": "logged out" });
-              }
-              else {
-                getFollowStatus(auth, post.author_username)
-                  .then(follow_status => {
-                    if (follow_status === 'accept') {
-                      resolve(post);
-                    }
-                    else if (follow_status === 'wait') {
-                      resolve({ "error": "request awaiting" });
-                      // TODO: render "this user must accept your request" page
-                    }
-                    else if (follow_status === 'none') {
-                      resolve({ "error": "follow to view" });
-                      // TODO: render "you must follow this user to view this post" page
-                    }
-                    else {
-                      resolve({ "error": "follow to view" });
-                      // TODO: render "you must follow this user to view this post" page
-                    }
-                  })
-                  .catch(error => {
-                    reject(error);
-                  });
-              }
-            }
+            resolve({ "publicity": publicity, "post": post });
           })
           .catch(error => {
             reject(error);
@@ -76,7 +82,30 @@ const getPost = (POST_ID, auth) => {
         reject(error);
       });
   });
-};
+}
+
+const getPrivatePostIfViewable = (POST, auth) => {
+  return new Promise((resolve, reject) => {
+    getFollowStatus(auth, POST.author_username)
+      .then(follow_status => {
+        if (follow_status === 'accept') {
+          resolve(post);
+        }
+        else if (follow_status === 'wait') {
+          resolve({ "error": "request awaiting" });
+        }
+        else if (follow_status === 'none') {
+          resolve({ "error": "follow to view" });
+        }
+        else {
+          resolve({ "error": "follow to view" });
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  }
+}
 
 const getPostInfo = (POST_ID) => {
   return new Promise((resolve, reject) => {
@@ -226,7 +255,7 @@ const checkUserLogin = (username, password) => {
   });
 };
 
-const getUserPublic = (username) => {
+const isUserPublic = (username) => {
   return new Promise((resolve, reject) => {
     pool
       .query('SELECT * FROM users WHERE username = $1', [username])

@@ -65,6 +65,11 @@ app.get('/api/post/:id', (req, res) => {
     });
 });
 
+app.get('api/postcomments/:id', (req, res) => {
+  const POST_ID = req.params.id;
+  const auth = req.query.auth;
+});
+
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === undefined || password === undefined) {
