@@ -55,10 +55,37 @@ const getPost = (POST_ID, auth) => {
 
 const getPostComments = (POST_ID, auth) => {
   return new Promise((resolve, reject) => {
-    pool
-      .query('SELECT * FROM comments WHERE post = $1', [POST_ID])
-      .then(results => {
-        resolve(results.rows);
+    getPostIfViewable(POST_ID)
+      .then(result => {
+        if (result.publicity === 'public') {
+          queryPostComments(POST_ID)
+            .then(comments => {
+              resolve(comments);
+            })
+            .catch(error => {
+              reject(error);
+            });
+        }
+        else {
+          getFollowStatus(auth, POST.author_username)
+            .then(follow_status => {
+              if (follow_status === 'accept') {
+                queryPostComments(POST_ID)
+                  .then(comments => {
+                    resolve(comments);
+                  })
+                  .catch(error => {
+                    reject(error);
+                  });
+              }
+              else {
+                resolve({ "error": "not following post author" });
+              }
+            })
+            .catch(error => {
+              reject(error);
+            });
+        }
       })
       .catch(error => {
         reject(error);
@@ -82,7 +109,7 @@ const getPostIfViewable = (POST_ID) => {
         reject(error);
       });
   });
-}
+};
 
 const getPrivatePostIfViewable = (POST, auth) => {
   return new Promise((resolve, reject) => {
@@ -104,8 +131,21 @@ const getPrivatePostIfViewable = (POST, auth) => {
       .catch(error => {
         reject(error);
       });
-  }
-}
+  });
+};
+
+const queryPostComments = (POST_ID) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM comments WHERE post = $1', [POST_ID])
+      .then(results => {
+        resolve(results.rows);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
 
 const getPostInfo = (POST_ID) => {
   return new Promise((resolve, reject) => {
