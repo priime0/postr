@@ -12,13 +12,19 @@ window.addEventListener('load', (event) => {
   }
 });
 
-Vue.component('detailedpost', {
+Vue.component('detailed-post', {
   props: ['info'],
   template:
   `<div id="post-long"><h1>{{ info.title }}</h1>
    <h5 class="author">{{ info.author_name }} @{{ info.author_username }} {{ info.time }}</h5>
    <h5 class="tags"><span v-for="tag in info.tags">{{ tag }}</span></h5>
    <p>{{ info.text }}</p></div>`
+});
+
+Vue.component('post-comment', {
+  props: ['info'],
+  template:
+  `<div class="post-comment"></div>`
 });
 
 const postDetails = new Vue({
