@@ -65,11 +65,11 @@ app.get('/api/post/:id', (req, res) => {
     });
 });
 
-app.get('api/postcomments/:id', (req, res) => {
+app.get('/api/postcomments/:id', (req, res) => {
   const POST_ID = req.params.id;
   const auth = req.query.auth;
 
-  getPostComments(POST_ID, auth)
+  db.getPostComments(POST_ID, auth)
     .then(comments => {
       res.status(200).json(comments);
     })

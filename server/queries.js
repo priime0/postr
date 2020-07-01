@@ -398,6 +398,7 @@ const createNewUUID = () => {
 
 module.exports = {
   getPost: getPost,
+  getPostComments: getPostComments,
   getFeed: getFeed,
   getPostInfo: getPostInfo,
   loginUser: loginUser,
