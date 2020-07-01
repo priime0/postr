@@ -139,7 +139,36 @@ const queryPostComments = (POST_ID) => {
     pool
       .query('SELECT * FROM comments WHERE post = $1', [POST_ID])
       .then(results => {
-        resolve(results.rows);
+        const comments = results.rows;
+        const detailed_comments = comments.map(comment => {
+          return getCommentDetailed(comment);
+        });
+        Promise.all([detailed_comments])
+          .then(ret_comments => {
+            resolve(ret_comments);
+          })
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const getCommentDetailed = (comment) => {
+  return new Promise((resolve, reject) => {
+    const author_id = comment.author;
+    getUsernamesFromId(author_id)
+      .then(author => {
+        resolve({
+          "id": comment.id,
+          "author_name": author.name,
+          "author_username": author.username,
+          "time": comment.time,
+          "text": comment.text
+        });
       })
       .catch(error => {
         reject(error);
@@ -149,8 +178,6 @@ const queryPostComments = (POST_ID) => {
 
 const getPostInfo = (POST_ID) => {
   return new Promise((resolve, reject) => {
-    const POST_FILE = path.join(__dirname, `${POST_DIR}/${POST_ID}`);
-    const POST_CONTENTS = fs.readFileSync(POST_FILE, 'utf-8');
     pool
       .query('SELECT * FROM posts WHERE id = $1', [POST_ID])
       .then((results) => {
@@ -164,7 +191,7 @@ const getPostInfo = (POST_ID) => {
               "author_username": author.username,
               "time": post.time,
               "tags": post.tags.split(','),
-              "text": POST_CONTENTS
+              "text": post.text
             });
           })
           .catch(error => {
