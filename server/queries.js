@@ -140,10 +140,16 @@ const queryPostComments = (POST_ID) => {
       .query('SELECT * FROM comments WHERE post = $1', [POST_ID])
       .then(results => {
         const comments = results.rows;
-        const detailed_comments = comments.map(comment => {
-          return getCommentDetailed(comment);
+        let detailed_comments = comments.map(comment => {
+          return getCommentDetailed(comment)
+            .then(detailed_comment => {
+              resolve(detailed_comment);
+            })
+            .catch(error => {
+              reject(error);
+            });
         });
-        Promise.all([detailed_comments])
+        Promise.all(detailed_comments)
           .then(ret_comments => {
             resolve(ret_comments);
           })
