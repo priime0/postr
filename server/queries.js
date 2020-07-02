@@ -3,14 +3,9 @@ const Pool = require('pg').Pool;
 const fs = require('fs');
 const path = require('path');
 const uuid = require('uuid');
-const pool = new Pool({
-  user: 'me',
-  host: 'localhost',
-  database: 'postr',
-  password: 'password',
-  port: 5432
-});
-const POST_DIR = '../data/posts';
+
+const dblogin = require('./login.json');
+const pool = new Pool(dblogin);
 
 const getFeed = (userauth) => {
   return new Promise((resolve, reject) => {
