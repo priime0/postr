@@ -13,7 +13,7 @@
   <main id="main">
     <detailed-post v-bind:key="info.id" v-bind:info="info"></detailed-post>
     <div id="comment-section">
-
+      <post-comment v-bind:key="info.comments.id" v-bind:info="info"></comment>
     </div>
   </main>
   <script type="text/javascript" src="../post.js"></script>

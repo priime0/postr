@@ -24,7 +24,10 @@ Vue.component('detailed-post', {
 Vue.component('post-comment', {
   props: ['info'],
   template:
-  `<div class="post-comment"></div>`
+  `<div class="post-comment">
+     <h5 class="author">{{ info.author }}</h5>
+     <p>{{ info.text }}</p>
+   </div>`
 });
 
 const postDetails = new Vue({
@@ -38,11 +41,11 @@ const postDetails = new Vue({
       "author_username": "",
       "time": "",
       "tags": [],
-      "text": ""
+      "text": "",
+      "comments": [],
     }
   }
 });
-
 
 
 const updatePost = () => {
@@ -52,6 +55,18 @@ const updatePost = () => {
       .then(post => {
         if (post.error === undefined) {
           postDetails.info = post;
+        }
+        else {
+          console.log(post.error);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
+    fetchPostComments()
+      .then(comments => {
+        if (comments.error === undefined) {
+          postDetails.info.comments = comments;
         }
         else {
           console.log(post.error);
@@ -106,6 +121,26 @@ const fetchPost = () => {
         data.json()
           .then(post => {
             resolve(post);
+          })
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
+
+const fetchPostComments = () => {
+  const POST_ID = getPostId();
+  const URL = `${BASE_URL}/api/postcomments/${POST_ID}`;
+  return new Promise((resolve, reject) => {
+    fetch(URL)
+      .then(data => {
+        data.json()
+          .then(comments => {
+            resolve(comments);
           })
           .catch(error => {
             reject(error);
