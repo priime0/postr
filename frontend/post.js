@@ -25,7 +25,7 @@ Vue.component('post-comment', {
   props: ['comment'],
   template:
   `<div class="post-comment">
-     <h5 class="author">{{ comment.author }}</h5>
+     <h5 class="author">{{ comment.author_name }} @{{ comment.author_username }} {{ comment.time }}</h5>
      <p>{{ comment.text }}</p>
    </div>`
 });
