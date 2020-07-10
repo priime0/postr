@@ -138,11 +138,8 @@ const queryPostComments = (POST_ID) => {
         let detailed_comments = comments.map(comment => {
           return getCommentDetailed(comment)
             .then(detailed_comment => {
-              resolve(detailed_comment);
+              return detailed_comment;
             })
-            .catch(error => {
-              reject(error);
-            });
         });
         Promise.all(detailed_comments)
           .then(ret_comments => {
