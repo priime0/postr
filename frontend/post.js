@@ -22,11 +22,11 @@ Vue.component('detailed-post', {
 });
 
 Vue.component('post-comment', {
-  props: ['info'],
+  props: ['comment'],
   template:
   `<div class="post-comment">
-     <h5 class="author">{{ info.author }}</h5>
-     <p>{{ info.text }}</p>
+     <h5 class="author">{{ comment.author }}</h5>
+     <p>{{ comment.text }}</p>
    </div>`
 });
 
@@ -42,8 +42,8 @@ const postDetails = new Vue({
       "time": "",
       "tags": [],
       "text": "",
-      "comments": [],
-    }
+    },
+    comments: []
   }
 });
 
@@ -66,10 +66,10 @@ const updatePost = () => {
     fetchPostComments()
       .then(comments => {
         if (comments.error === undefined) {
-          postDetails.info.comments = comments;
+          postDetails.comments = comments;
         }
         else {
-          console.log(post.error);
+          console.log(comments.error);
         }
       })
       .catch(error => {
@@ -89,6 +89,18 @@ const updatePost = () => {
       .catch(error => {
         console.log(error);
       });
+    fetchCommentsAuth(token)
+      .then(comments => {
+        if (comments.error === undefined) {
+          postDetails.comments = comments;
+        }
+        else {
+          console.log(comments.error);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 }
 
@@ -101,6 +113,27 @@ const fetchPostAuth = (token) => {
         data.json()
           .then(post => {
             resolve(post);
+          })
+          .catch(error => {
+            reject(error);
+          });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const fetchCommentsAuth = (token) => {
+  const POST_ID = getPostId();
+  const URL = `${BASE_URL}/api/postcomments/${POST_ID}?auth=${token}`;
+  return new Promise((resolve, reject) => {
+    fetch(URL)
+      .then(data => {
+        data.json()
+          .then(comments => {
+            console.log(comments);
+            resolve(comments);
           })
           .catch(error => {
             reject(error);
@@ -130,7 +163,7 @@ const fetchPost = () => {
         reject(error);
       });
   });
-}
+};
 
 const fetchPostComments = () => {
   const POST_ID = getPostId();
@@ -150,7 +183,7 @@ const fetchPostComments = () => {
         reject(error);
       });
   });
-}
+};
 
 const getPostId = () => {
   const full = window.location.pathname;
