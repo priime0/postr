@@ -78,6 +78,17 @@ app.get('/api/postcomments/:id', (req, res) => {
     });
 });
 
+app.post('/api/register', (req, res) => {
+  const user_details = req.body;
+  db.registerUser(user_details)
+    .then(result => {
+      res.status(200).json(result);
+    })
+    .catch(error => {
+      console.log(error);
+    });
+});
+
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === undefined || password === undefined) {
@@ -85,8 +96,8 @@ app.post('/api/login', (req, res) => {
   }
   else {
     db.loginUser(username, password)
-      .then(uuid => {
-        res.json(uuid);
+      .then(token => {
+        res.json(token);
       })
       .catch(error => {
         res.status(401);

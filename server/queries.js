@@ -3,9 +3,12 @@ const Pool = require('pg').Pool;
 const fs = require('fs');
 const path = require('path');
 const uuid = require('uuid');
+const bcrypt = require('bcrypt');
 
 const dblogin = require('./login.json');
 const pool = new Pool(dblogin);
+
+const salt_rounds = 10;
 
 const getFeed = (userauth) => {
   return new Promise((resolve, reject) => {
@@ -202,13 +205,108 @@ const getPostInfo = (POST_ID) => {
   });
 };
 
+const registerUser = (user_details) => {
+  return new Promise((resolve, reject) => {
+    verifyUserDetails(user_details)
+      .then(a => {
+        const { name, username, password, email, description, privacy } = user_details;
+        encryptPassword(password)
+          .then(hashed_password => {
+            checkForExistingUser(username, email)
+              .then(result => {
+                if (result) {
+                  const user = {
+                    name,
+                    username,
+                    "password": hashed_password,
+                    email,
+                    description,
+                    privacy
+                  };
+                  addUserToDatabase(user);
+                  resolve({ "status": "success" });
+                }
+                else {
+                  resolve({ "error": "user already exists" });
+                }
+              })
+              .catch(error => {
+                reject(error);
+              });
+          })
+      })
+      .catch(error => {
+        resolve({ "error": error });
+      });
+  });
+};
+
+const verifyUserDetails = (user_details) => {
+  return new Promise((resolve, reject) => {
+    if (user_details.name === undefined || user_details.name.length < 3) {
+      reject("name too short");
+    }
+    if (user_details.username === undefined || user_details.username.length < 3) {
+      reject("username too short");
+    }
+    if (user_details.password === undefined || user_details.password.length < 6) {
+      reject("password too short");
+    }
+    if (user_details.email === undefined || user_details.email.length < 3) {
+      reject("email too short");
+    }
+    if (user_details.privacy != "public" && user_details.privacy != "private") {
+      reject("invalid privacy");
+    }
+    else {
+      resolve("valid");
+    }
+  });
+};
+
+const encryptPassword = (password) => {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, salt_rounds, (err, hash) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(hash);
+    });
+  });
+};
+
+const checkForExistingUser = (username, email) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM users WHERE username = $1 OR email = $2')
+      .then(results => {
+        if (results.rows.length == 0) {
+          resolve(true);
+        }
+        else {
+          resolve(false);
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+const addUserToDatabase = (user) => {
+  // TODO: add uuid
+  pool
+    .query('INSERT INTO users (name, username, password, email, description, privacy) VALUES ($1, $2, $3, $4, $5, $6)',
+      [user.name, user.username, user.password, user.email, user.description, user.privacy])
+};
+
 const loginUser = (username, password) => {
   return new Promise((resolve, reject) => {
     checkUserLogin(username, password)
       .then(result => {
-        addUUID(username)
-          .then(id => {
-            resolve({"uuid": id});
+        createLoginToken(username)
+          .then(login_token => {
+            resolve({"token": login_token});
           })
           .catch(error => {
             reject(error);
@@ -369,7 +467,7 @@ const getFollowStatus = (first_auth, second_username) => {
   });
 };
 
-const addUUID = (username) => {
+const createLoginToken = (username) => {
   return new Promise((resolve, reject) => {
     createNewUUID()
       .then(id => {
@@ -400,4 +498,5 @@ module.exports = {
   getFeed: getFeed,
   getPostInfo: getPostInfo,
   loginUser: loginUser,
+  registerUser: registerUser,
 }
