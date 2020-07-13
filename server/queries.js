@@ -278,7 +278,8 @@ const encryptPassword = (password) => {
 const checkForExistingUser = (username, email) => {
   return new Promise((resolve, reject) => {
     pool
-      .query('SELECT * FROM users WHERE username = $1 OR email = $2')
+      .query('SELECT * FROM users WHERE username = $1 OR email = $2', 
+        [username, email])
       .then(results => {
         if (results.rows.length == 0) {
           resolve(true);
@@ -306,7 +307,7 @@ const loginUser = (username, password) => {
       .then(result => {
         createLoginToken(username)
           .then(login_token => {
-            resolve({"token": login_token});
+            resolve({ "token": login_token });
           })
           .catch(error => {
             reject(error);
@@ -404,12 +405,22 @@ const checkUserLogin = (username, password) => {
     pool
       .query('SELECT * FROM users WHERE username = $1', [username])
       .then(results => {
-        const info = results.rows[0];
-        if (password === info.password) {
-          resolve("Correct password");
+        if (results.rows.length === 0) {
+          reject("User non-existent");
         }
         else {
-          reject("Incorrect password");
+          const db_password = results.rows[0].password;
+          bcrypt.compare(password, db_password, (err, result) => {
+            if (err) {
+              reject(err);
+            }
+            else if (result) {
+              resolve("Correct password");
+            }
+            else {
+              reject("Incorrect password");
+            }
+          });
         }
       })
       .catch(error => {
