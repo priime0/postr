@@ -295,10 +295,13 @@ const checkForExistingUser = (username, email) => {
 };
 
 const addUserToDatabase = (user) => {
-  // TODO: add uuid
-  pool
-    .query('INSERT INTO users (name, username, password, email, description, privacy) VALUES ($1, $2, $3, $4, $5, $6)',
-      [user.name, user.username, user.password, user.email, user.description, user.privacy])
+  createNewUUID()
+    .then(user_uuid => {
+      pool
+        .query('INSERT INTO users (uuid, name, username, password, email, description, privacy) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+          [user_uuid, user.name, user.username, user.password, user.email, user.description, user.privacy]);
+    })
+    .catch(error => console.log(error));
 };
 
 const loginUser = (username, password) => {
