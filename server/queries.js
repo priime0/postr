@@ -91,6 +91,20 @@ const getPostComments = (POST_ID, auth) => {
   });
 };
 
+const getPostLikes = (POST_ID) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM postlikes WHERE post = $1',
+        [POST_ID])
+      .then(results => {
+        resolve(results.rows);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
 const getPostIfViewable = (POST_ID) => {
   return new Promise((resolve, reject) => {
     getPostInfo(POST_ID)

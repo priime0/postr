@@ -78,6 +78,18 @@ app.get('/api/postcomments/:id', (req, res) => {
     });
 });
 
+app.get('/api/postlikes/:id', (req, res) => {
+  const POST_ID = req.params.id;
+
+  db.getPostLikes(POST_ID)
+    .then(likes => {
+      res.status(200).json(likes);
+    })
+    .catch(error => {
+      console.log(error);
+    });
+});
+
 app.post('/api/register', (req, res) => {
   const user_details = req.body;
   db.registerUser(user_details)
