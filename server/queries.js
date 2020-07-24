@@ -495,6 +495,21 @@ const getFollowStatus = (first_auth, second_username) => {
   });
 };
 
+const createNewPost = (post, auth) => {
+  return new Promise((resolve, reject) => {
+    verifyLoginToken(auth)
+      .then(author => {
+        const { title, tags, time, text } = post;
+        pool
+          .query('INSERT INTO posts (author, title, tags, time, text) VALUES ($1, $2, $3, $4, $5)',
+            [author, title, tags, time, text]);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
 const createLoginToken = (username) => {
   return new Promise((resolve, reject) => {
     createNewUUID()
@@ -517,6 +532,25 @@ const createLoginToken = (username) => {
 const createNewUUID = () => {
   return new Promise((resolve, reject) => {
     resolve(uuid.v4());
+  });
+};
+
+const verifyLoginToken = (token) => {
+  return new Promise((resolve, reject) => {
+    pool
+      .query('SELECT * FROM logintokens WHERE token = $1 LIMIT 1',
+        [token])
+      .then(results => {
+        if (results.rows.length === 0) {
+          reject("Invalid login token");
+        }
+        else {
+          resolve(results.rows[0].userid);
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
   });
 };
 
